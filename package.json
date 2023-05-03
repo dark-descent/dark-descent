@@ -1,0 +1,32 @@
+{
+	"name": "dark-descent",
+	"version": "0.1.0",
+	"description": "",
+	"private": true,
+	"scripts": {
+		"start": "webpack serve --mode=development",
+		"build": "webpack build --mode=production"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "MIT",
+	"devDependencies": {
+		"copy-webpack-plugin": "^11.0.0",
+		"css-loader": "^6.7.3",
+		"file-loader": "^6.2.0",
+		"html-webpack-plugin": "^5.5.1",
+		"mini-css-extract-plugin": "^2.7.5",
+		"path-browserify": "^1.0.1",
+		"raw-loader": "^4.0.2",
+		"sass": "^1.62.1",
+		"sass-loader": "^13.2.2",
+		"style-loader": "^3.3.2",
+		"ts-loader": "^9.4.2",
+		"tsconfig-paths-webpack-plugin": "^4.0.1",
+		"typescript": "^5.0.4",
+		"url-loader": "^4.1.1",
+		"webpack": "^5.81.0",
+		"webpack-cli": "^5.0.2",
+		"webpack-dev-server": "^4.13.3"
+	}
+}
