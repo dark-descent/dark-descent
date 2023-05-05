@@ -99,5 +99,6 @@ module.exports = {
 		},
 		compress: true,
 		port: 9000,
+		host: "local-ip"
 	},
 };
