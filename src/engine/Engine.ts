@@ -1,101 +1,91 @@
 import { Game, GameClass } from "./Game";
 import { InputSystem } from "./InputSystem";
 import { RenderSystem } from "./RenderSystem";
-import { System, SystemClass } from "./System";
+import { ResourceManager } from "./ResourceManager";
+import { SceneManager } from "./SceneManager";
+import { SubSystem, SubSystemConfig } from "./SubSystem";
 
-declare global
+export class Engine<T extends Game<T>>
 {
-	namespace Engine
+	private static readonly defaultConfig: Engine.Config = {
+		input: {},
+		renderer: {
+			type: "wgpu",
+			mountElement: document.body,
+			fullscreen: true
+		},
+		resourceManager: {},
+		sceneManager: {},
+	};
+
+	public static readonly load = async <T extends Game<T>>(GameClass: GameClass<T>, config: Partial<Engine.Config> = {}): Promise<Engine<T>> =>
 	{
-		interface Event
-		{
-			"system-configured": System;
-			"system-terminated": System;
-		}
+		const engineConfig = { ...this.defaultConfig, ...config } as Engine.Config;
+		const engine = new Engine<T>(GameClass, engineConfig);
 
-		type EventHandler<K extends string = keyof Engine.Event> = (...args: K extends keyof Engine.Event ? Engine.Event[K] : any[]) => void | Promise<void>;
-	}
-}
-
-export class Engine<T extends Game<T> = any>
-{
-	public static readonly load = async <T extends Game<T>>(GameClass: GameClass<T>): Promise<Engine<T>> =>
-	{
-		console.log(`Loading game ${GameClass.name}...`);
-		const engine = new Engine(GameClass);
-
-		console.log(`Configuring engine...`);
-		await engine.configure();
+		await engine.configure(engineConfig);
 
 		return engine;
 	}
 
 	public readonly game: Readonly<T>;
 
-	public readonly systems = new Map<SystemClass<any>, System>;
+	public readonly subSystems: Engine.SubSystems;
 
 	private readonly eventHandlers: { [event: string]: Engine.EventHandler<string>[]; } = {};
 
-	private constructor(GameClass: GameClass<T>)
+	private constructor(GameClass: GameClass<T>, config: Engine.Config)
 	{
 		this.game = new GameClass(this);
 
-		this.registerSystem(RenderSystem);
-		this.registerSystem(InputSystem);
+		this.subSystems = {
+			input: new InputSystem(this, config.input),
+			renderer: new RenderSystem(this, config.renderer),
+			resourceManager: new ResourceManager(this, config.resourceManager),
+			sceneManager: new SceneManager(this, config.sceneManager)
+		};
 	}
 
-	protected registerSystem<T extends System>(SystemClass: SystemClass<T>)
+	private readonly iterateSubSystems = <R>(callback: <K extends keyof Engine.SubSystems>(system: Engine.SubSystems[K], key: K) => R): R[] => Object.keys(this.subSystems).map(s => callback((this.subSystems as any)[s] as any, s as any));
+
+	private async configure(config: Engine.Config)
 	{
-		if (this.systems.has(SystemClass))
-			throw new Error(`${SystemClass.name} is already registered!`);
+		console.groupCollapsed("Configuring subSystems...");
 
-		this.systems.set(SystemClass, new SystemClass(this));
-	}
-
-	public getSystem<T extends System>(SystemClass: SystemClass<T>)
-	{
-		const system = this.systems.get(SystemClass);
-
-		if (!system)
-			throw new Error(`${SystemClass.name} is not registered!`);
-
-		return system;
-	}
-
-	private async configure()
-	{
-		console.groupCollapsed("Configuring systems...");
-
-		await Promise.all(Array.from(this.systems.values()).map(async (system) => 
+		await Promise.all(this.iterateSubSystems(async (system, name) => 
 		{
-			await system.configure();
+			console.log(`Configuring subsystem ${name}...`);
+			await system.configure(config[name] as any);
+			console.log(`Subsystem ${name} configured!`);
+
 			this.emitEvent("system-configured", system);
 		}));
 
 		console.log("Systems configured!");
+		console.groupEnd();
 	}
 
 	public async start() 
 	{
 		console.log(`Starting game...`);
-
-
-		Array.from(this.systems.values()).map((system) => system.run());
-	};
+	}
 
 	public async stop() 
 	{
 		console.log(`Stopping game...`);
 		await this.terminate();
-	};
+	}
 
 	private async terminate()
 	{
-		console.log("Terminating systems...");
+		console.log("Terminating subSystems...");
 
-		await Promise.all(Array.from(this.systems.values()).map(async system =>
+		await Promise.all(this.iterateSubSystems(async (system, name) => 
 		{
+			console.log(`Terminating subsystem ${name}...`);
 			await system.terminate();
+			console.log(`Subsystem ${name} terminated!`);
+
 			this.emitEvent("system-terminated", system);
 		}));
 
@@ -123,4 +113,26 @@ export class Engine<T extends Game<T> = any>
 		if (this.eventHandlers[event])
 			await Promise.all(this.eventHandlers[event].map(callback => callback(data)));
 	}
+}
+
+export namespace Engine
+{
+	export type SubSystems = {
+		input: InputSystem;
+		renderer: RenderSystem;
+		sceneManager: SceneManager;
+		resourceManager: ResourceManager;
+	};
+
+	export type Config = {
+		[K in keyof SubSystems]: SubSystemConfig<SubSystems[K]>;
+	};
+
+	export interface Event
+	{
+		"system-configured": SubSystem<any>;
+		"system-terminated": SubSystem<any>;
+	}
+
+	export type EventHandler<K extends string = keyof Engine.Event> = (...args: K extends keyof Engine.Event ? Engine.Event[K] : any[]) => void | Promise<void>;
 }

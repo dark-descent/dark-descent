@@ -1,10 +1,10 @@
 import { KeyCode, createKeyCodeMap } from "./KeyCode";
-import { System } from "./System";
+import { SubSystem } from "./SubSystem";
 /**
  * Class for keeping track/managing all input events for Keyboard, Mouse, Joysticks etc...
- * @extends System
+ * @extends SubSystem
  */
-export class InputSystem extends System
+export class InputSystem extends SubSystem<{}>
 {
 	/** An object to keep track of al the keys that are pressed. */
 	private readonly keyDownMap = createKeyCodeMap(false);

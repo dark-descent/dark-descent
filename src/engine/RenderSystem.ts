@@ -1,52 +1,125 @@
-import { Engine } from "./Engine";
-import { System } from "./System";
+import { SubSystem } from "./SubSystem";
+import { Renderer, RendererConfig } from "./renderer/Renderer";
+import { WGPURenderer, WGPURendererConfig } from "./renderer/WGPURenderer";
 
-export class RenderSystem extends System
+const isFullscreenConfig = (config: BaseRenderConfig): config is FullScreenConfig => "fullscreen" in config;
+
+const isResizableConfig = (config: BaseRenderConfig): config is ResizableScreenConfig => "resizable" in config;
+
+const isFixedConfig = (config: BaseRenderConfig): config is FixedScreenConfig => "width" in config;
+
+export class RenderSystem extends SubSystem<RenderConfig>
 {
-	private readonly canvas: HTMLCanvasElement;
+	public readonly canvas: HTMLCanvasElement = document.createElement("canvas");
 
-	private ctx_: CanvasRenderingContext2D | null = null;
+	private renderer: Renderer<RenderConfig> | null = null;
 
-	public get ctx()
+	public override async configure(config: RenderConfig): Promise<void>
 	{
-		if (!this.ctx_)
-			throw new Error(`Context is not configured!`);
-		return this.ctx_;
-	}
-
-	public constructor(engine: Engine)
-	{
-		super(engine);
-		this.canvas = document.createElement("canvas");
-	}
-
-	public override async configure(): Promise<void>
-	{
-		document.body.append(this.canvas);
-		this.ctx_ = this.canvas.getContext("2d");
-
 		window.addEventListener("resize", this.onResize);
 
-		this.onResize();
+		config.mountElement.append(this.canvas);
 
-		this.canvas.style.backgroundColor = "red";
-	}
+		if(isResizableConfig(config))
+		{
+			this.onResize();
+		}
+		else if (isFullscreenConfig(config))
+		{
+			await new Promise<void>((resolve) => 
+			{
+				const fullscreenEl = document.createElement("h1");
+				fullscreenEl.style.position = "absolute";
+				fullscreenEl.innerText = "Click once to start in fullscreen mode!";
+				document.body.append(fullscreenEl);
 
-	private readonly onResize = () =>
-	{
-		const p = this.canvas.parentElement!;
-		this.canvas.style.width = `${p.clientWidth}px`;
-		this.canvas.style.height = `${p.clientHeight}px`;
+				const goFullScreen = () => 
+				{
+					fullscreenEl.remove();
+					this.canvas.requestFullscreen({ navigationUI: "hide" });
+					window.removeEventListener("click", goFullScreen);
+					resolve();
+				};
+
+				window.addEventListener("click", goFullScreen);
+			});
+
+			this.onResize();
+		}
+		else if(isFixedConfig(config))
+		{
+			this.canvas.width = config.width;
+			this.canvas.height = config.height;
+			this.canvas.style.width = `${config.width}px`;
+			this.canvas.style.height = `${config.height}px`;
+		}
+
+		switch (config.type)
+		{
+			case "wgpu":
+				{
+					this.renderer = new WGPURenderer(this, this.canvas, config);
+					await this.renderer["configure"](config);
+				}
+				break;
+			default:
+				throw new Error(`No Renderer implemented for ${config.type}!`);
+		};
 	}
 
 	public override run(): void
 	{
-
+		this.renderer?.render();
 	}
 
 	public override async terminate(): Promise<void>
 	{
 		window.removeEventListener("resize", this.onResize);
-		this.canvas.remove();
+	}
+
+	private readonly onResize = () =>
+	{
+		if(isFixedConfig(this.config))
+			return;
+		
+		if(isFullscreenConfig(this.config))
+		{
+			this.canvas.style.width = `${this.canvas.clientWidth}px`;
+			this.canvas.style.height = `${this.canvas.clientHeight}px`;	
+		}
+		else if(isResizableConfig(this.config))
+		{
+			const p = this.canvas.parentElement!;
+			
+			if(p.clientWidth === this.canvas.clientWidth && p.clientHeight === this.canvas.clientHeight)
+				return;
+
+			this.canvas.style.width = `${this.canvas.width = p.clientWidth}px`;
+			this.canvas.style.height = `${this.canvas.height = p.clientHeight}px`;	
+		}
+		
+		this.renderer && this.renderer["onResize"]([this.canvas.clientWidth, this.canvas.clientHeight]);
 	}
 }
+
+type BaseRenderConfig = FullScreenConfig | FixedScreenConfig | ResizableScreenConfig;
+
+type WithRenderConfig<T extends RendererConfig<string>> = T & BaseRenderConfig;
+
+type FullScreenConfig = {
+	fullscreen: true;
+	mountElement: HTMLElement;
+};
+
+type FixedScreenConfig = {
+	width: number;
+	height: number;
+	mountElement: HTMLElement;
+};
+
+type ResizableScreenConfig = {
+	resizable: true;
+	mountElement: HTMLElement;
+}
+
+export type RenderConfig = WithRenderConfig<WGPURendererConfig>;
