@@ -1,3 +1,4 @@
+/** @enum KeyCode to map all keyboard events. */
 export const enum KeyCode
 {
 	BACKSPACE = "Backspace",
@@ -105,6 +106,10 @@ export const enum KeyCode
 	QUOTE = "Quote",
 }
 
+/**
+ * @param {T} initValue The initial value to which all keycodes in the map will be set.
+ * @returns a map containing all keycodes set to an initial value.
+ */
 export const createKeyCodeMap = <T>(initValue: T): { [key in KeyCode]: T } => ({
 	Backspace: initValue,
 	Tab: initValue,
