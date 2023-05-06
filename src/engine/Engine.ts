@@ -14,7 +14,9 @@ export class Engine<T extends Game<T>>
 			mountElement: document.body,
 			fullscreen: true
 		},
-		resourceManager: {},
+		resourceManager: {
+			context: require.context("../game/assets")
+		},
 		sceneManager: {},
 	};
 
@@ -68,6 +70,7 @@ export class Engine<T extends Game<T>>
 	public async start() 
 	{
 		console.log(`Starting game...`);
+		await this.game.start();
 		setInterval(() => 
 		{
 			this.iterateSubSystems(s => s.run());

@@ -5,11 +5,11 @@ import { SubSystem } from "./SubSystem";
  * Class for keeping track/managing of all resources.
  * @extends SubSystem
  */
-export class ResourceManager extends SubSystem<{}>
+export class ResourceManager extends SubSystem<ResourceManagerConfig>
 {
 	private readonly resources: { [path: string]: [Resource<any>, number] } = {};
 
-	private readonly loadPromises: Promise<void>[] = [];
+	private loadPromises: Promise<void>[] = [];
 
 	public override async configure(): Promise<void>
 	{
@@ -26,18 +26,39 @@ export class ResourceManager extends SubSystem<{}>
 
 	}
 
-	public readonly load = <T extends Resource<any>>(type: ResourceClass<T>, path: string): T =>
+	public readonly load = <T extends Resource<any>>(type: ResourceClass<T>, paths: `./${string}`[]): T[] =>
 	{
-		if (!this.resources[path])
+		return paths.map(p => 
 		{
-			this.resources[path] = [new type(path), 1];
-			this.loadPromises.push(this.resources[path][0].load());
-		}
-		else
-		{
-			this.resources[path][1]++;
-		}
+			if (!this.resources[p])
+			{
+				this.resources[p] = [new type(this.config.context, p), 1];
+				this.loadPromises.push(this.resources[p][0].load());
+			}
+			else
+			{
+				this.resources[p][1]++;
+			}
 
-		return this.resources[path][0] as T;
+			return this.resources[p][0] as T;
+		});
+	}
+
+	public readonly loadPending = async () => 
+	{
+		await Promise.all(this.loadPromises);
+		this.loadPromises = [];
 	}
 }
+
+export type ResourceManagerConfig = {
+	context: ImportContext;
+};
+
+export type ImportContext = {
+	keys(): string[];
+	(id: string): any;
+	<T>(id: string): T;
+	resolve(id: string): string;
+	id: string;
+};

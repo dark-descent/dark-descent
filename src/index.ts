@@ -6,6 +6,9 @@ const engine = await Engine.load(Game, {
 		type: "wgpu",
 		mountElement: document.body,
 		resizable: true
+	},
+	resourceManager: {
+		context: require.context("./game/assets", true, /\.(png|jpg|jpeg)$/, "lazy-once")
 	}
 });
 

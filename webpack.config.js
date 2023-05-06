@@ -35,14 +35,10 @@ module.exports = {
 			},
 			{
 				test: /\.(jpe?g|png|gif|svg|ico|webp)$/i,
-				use: {
-					loader: "url-loader",
-					options: {
-						fallback: "file-loader",
-						limit: 40000,
-						name: "img/[name].[ext]",
-					},
-				},
+				loader: "file-loader",
+				options: {
+					name: 'img/[contenthash].[ext]',
+				}
 			}
 		],
 	},
