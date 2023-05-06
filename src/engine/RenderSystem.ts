@@ -57,14 +57,13 @@ export class RenderSystem extends SubSystem<RenderConfig>
 		switch (config.type)
 		{
 			case "wgpu":
-				{
 					this.renderer = new WGPURenderer(this, this.canvas, config);
-					await this.renderer["configure"](config);
-				}
 				break;
 			default:
 				throw new Error(`No Renderer implemented for ${config.type}!`);
-		};
+		}
+
+		await this.renderer["configure"](config);
 	}
 
 	public override run(): void
@@ -75,6 +74,7 @@ export class RenderSystem extends SubSystem<RenderConfig>
 	public override async terminate(): Promise<void>
 	{
 		window.removeEventListener("resize", this.onResize);
+		this.renderer && await this.renderer["terminate"]();
 	}
 
 	private readonly onResize = () =>

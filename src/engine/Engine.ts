@@ -68,6 +68,10 @@ export class Engine<T extends Game<T>>
 	public async start() 
 	{
 		console.log(`Starting game...`);
+		setInterval(() => 
+		{
+			this.iterateSubSystems(s => s.run());
+		}, 1000 / 60);
 	}
 
 	public async stop() 

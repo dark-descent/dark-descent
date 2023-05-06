@@ -98,7 +98,7 @@ module.exports = {
 			directory: path.join(__dirname, "./public"),
 		},
 		compress: true,
-		port: 9000,
-		host: "local-ip"
+		port: 80,
+		host: "localhost"
 	},
 };
