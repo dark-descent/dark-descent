@@ -1,4 +1,5 @@
 import { Resource, ResourceClass } from "./Resource";
+import { Scene } from "./Scene";
 import { SubSystem } from "./SubSystem";
 
 /**
@@ -13,7 +14,7 @@ export class ResourceManager extends SubSystem<ResourceManagerConfig>
 
 	public override async configure(): Promise<void>
 	{
-
+		this.addEventListener("scene-loaded", this.loadPending);
 	}
 
 	public override run(): void
@@ -23,7 +24,7 @@ export class ResourceManager extends SubSystem<ResourceManagerConfig>
 
 	public override async terminate(): Promise<void>
 	{
-
+		this.removeEventListener("scene-loaded", this.loadPending);
 	}
 
 	public readonly load = <T extends Resource<any>>(type: ResourceClass<T>, paths: `./${string}`[]): T[] =>

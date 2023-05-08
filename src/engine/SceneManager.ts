@@ -49,7 +49,7 @@ export class SceneManager extends SubSystem<{}>
 
 		await scene.onLoad();
 
-		await this.engine.subSystems.resourceManager.loadPending();
+		await this.emitEvent("scene-loaded", scene);
 
 		this.loadingScene = null;
 		this.activeScene = scene;

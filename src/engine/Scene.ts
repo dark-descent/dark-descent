@@ -1,4 +1,5 @@
 import { Engine } from "./Engine";
+import { Resource } from "./Resource";
 
 export abstract class Scene
 {

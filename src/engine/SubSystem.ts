@@ -9,7 +9,7 @@ export abstract class SubSystem<Config extends {}>
 	// #region Event functions
 	protected readonly addEventListener: <K extends keyof Engine.Event>(event: K, callback: Engine.EventHandler<K>) => void;
 	protected readonly removeEventListener: <K extends keyof Engine.Event>(event: K, callback: Engine.EventHandler<K>) => void;
-	protected readonly emitEvent: <K extends keyof Engine.Event>(event: K, data: Engine.Event[K]) => void;
+	protected readonly emitEvent: <K extends keyof Engine.Event>(event: K, data: Engine.Event[K]) => Promise<void>;
 	// #endregion
 
 	public constructor(engine: Engine<any>, config: Config)
