@@ -2,6 +2,7 @@ import { Game, GameClass } from "./Game";
 import { InputSystem } from "./InputSystem";
 import { RenderSystem } from "./RenderSystem";
 import { ResourceManager } from "./ResourceManager";
+import { Scene } from "./Scene";
 import { SceneManager } from "./SceneManager";
 import { SubSystem, SubSystemConfig } from "./SubSystem";
 
@@ -14,7 +15,9 @@ export class Engine<T extends Game<T>>
 			mountElement: document.body,
 			fullscreen: true
 		},
-		resourceManager: {},
+		resourceManager: {
+			context: require.context("../game/assets")
+		},
 		sceneManager: {},
 	};
 
@@ -68,6 +71,7 @@ export class Engine<T extends Game<T>>
 	public async start() 
 	{
 		console.log(`Starting game...`);
+		await this.game.start();
 		setInterval(() => 
 		{
 			this.iterateSubSystems(s => s.run());
@@ -90,32 +94,32 @@ export class Engine<T extends Game<T>>
 			await system.terminate();
 			console.log(`Subsystem ${name} terminated!`);
 
-			this.emitEvent("system-terminated", system);
+			await this.emitEvent("system-terminated", system);
 		}));
 
 		console.log("Systems terminated!");
 	}
 
-	public addEventListener<K extends keyof Engine.Event>(event: K, callback: Engine.EventHandler<K>)
+	public readonly addEventListener = <K extends keyof Engine.Event>(event: K, callback: Engine.EventHandler<K>) =>
 	{
 		if (!this.eventHandlers[event])
 			this.eventHandlers[event] = [];
-		if (!this.eventHandlers[event].includes(callback))
-			this.eventHandlers[event].push(callback);
+		if (!this.eventHandlers[event].includes(callback as any))
+			this.eventHandlers[event].push(callback as any);
 	}
 
-	public removeEventListener<K extends keyof Engine.Event>(event: K, callback: Engine.EventHandler<K>)
+	public readonly removeEventListener = <K extends keyof Engine.Event>(event: K, callback: Engine.EventHandler<K>) =>
 	{
-		const index = this.eventHandlers[event].indexOf(callback);
+		const index = this.eventHandlers[event].indexOf(callback as any);
 
 		if (index > -1)
 			this.eventHandlers[event].splice(index, 1);
 	}
 
-	public async emitEvent<K extends keyof Engine.Event>(event: K, data: Engine.Event[K])
+	public readonly emitEvent = async <K extends keyof Engine.Event>(event: K, data: Engine.Event[K]): Promise<void> =>
 	{
-		if (this.eventHandlers[event])
-			await Promise.all(this.eventHandlers[event].map(callback => callback(data)));
+		if (this.eventHandlers && this.eventHandlers[event])
+			await Promise.all(this.eventHandlers[event].map(callback => callback(data as any)));
 	}
 }
 
@@ -136,7 +140,8 @@ export namespace Engine
 	{
 		"system-configured": SubSystem<any>;
 		"system-terminated": SubSystem<any>;
+		"scene-loaded": Scene;
 	}
 
-	export type EventHandler<K extends string = keyof Engine.Event> = (...args: K extends keyof Engine.Event ? Engine.Event[K] : any[]) => void | Promise<void>;
+	export type EventHandler<K extends string = keyof Event> = (args: K extends keyof Engine.Event ? Engine.Event[K] : any[]) => void | Promise<void>;
 }

@@ -8,6 +8,9 @@ export abstract class Game<T extends Game<T>>
 	{
 		this.engine = engine;
 	}
+
+	public start(): Promise<void> | void {}
+	public stop(): Promise<void> | void {}
 }
 
 export type GameClass<T extends Game<T>> = new (engine: Engine<T>) => T;
