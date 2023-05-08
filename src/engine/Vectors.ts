@@ -4,7 +4,9 @@ class Vector2
 {
     components: any;
     static add: any;
+    static subtract: any;
     public argument: number;
+
     
     // constructor for components and arguments 
     constructor(components: any,  argument:number   )
