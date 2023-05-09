@@ -2,16 +2,19 @@ import { Engine } from "./Engine";
 
 class Vector2
 {
-    components: any;
+    public x : number;
+    public y : number;
+    public argument: number;
     static add: any;
     static subtract: any;
-    public argument: number;
+
 
     
     // constructor for components and arguments 
-    constructor(components: any,  argument:number   )
+    constructor( argument:number, x:number, y:number )
     {
-        this.components = components
+        this.x = x
+        this.y = y
         this.argument = argument
     }
 
@@ -19,4 +22,8 @@ class Vector2
 
 const direction2d = new Vector2(10,20);
 const direction3d = new Vector2(20,49);
+
+
+
+
 
