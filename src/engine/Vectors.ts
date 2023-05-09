@@ -1,6 +1,6 @@
 import { Engine } from "./Engine";
 
-class Vector
+class Vector2
 {
     public x : number;
     public y : number;
@@ -17,21 +17,21 @@ class Vector
     }
 
 // add operator (+)
-add (vector:Vector): Vector{
-return new Vector(this.x+ vector.x, this.y +vector.y); 
+add (vector:Vector2): Vector2{
+return new Vector2(this.x+ vector.x, this.y +vector.y); 
 }
 // substraction operator(-)
-subtract (vector:Vector): Vector{
-    return new Vector(this.x- vector.x, this.y -vector.y); 
+subtract (vector:Vector2): Vector2{
+    return new Vector2(this.x- vector.x, this.y -vector.y); 
     }
 
 // multiply operator(*)
-    multiply (vector:Vector): Vector{
-        return new Vector(this.x* vector.x, this.y *vector.y); 
+    multiply (vector:Vector2): Vector2{
+        return new Vector2(this.x* vector.x, this.y *vector.y); 
         }
 // division operator(/)
-        divide (vector:Vector): Vector{
-            return new Vector(this.x/ vector.x, this.y /vector.y); 
+        divide (vector:Vector2): Vector2{
+            return new Vector2(this.x/ vector.x, this.y /vector.y); 
             }
 
 }
